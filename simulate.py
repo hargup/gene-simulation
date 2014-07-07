@@ -65,10 +65,7 @@ def create_children(parent1, parent2):
     # the output produced by product is of type ('X', 'X')
     children = []
     for g in gene:
-        if np.random.randint(2) == 1:
-            children.append(person('M', g))
-        else:
-            children.append(person('F', g))
+        children.append(person('F', g))
     return children
 
 
@@ -78,11 +75,14 @@ def gen_population(pop_size):
     # the number of genders and their mode of reproduction
     # Currently the reproduction is sexual but all the individuals can be thought to be
     # hermaphodite, who can possibly have sex with themselves
-    pop = []
+    pop = np.zeros(pop_size, dtype=tuple)
 
+    i = 0
     for gene in initial_gene_ratio.keys():
-        pop = pop + [person('F', gene) for i in
-                     xrange(int(initial_gene_ratio[gene]*pop_size/sum(initial_gene_ratio.values())))]
+        j = i + int(initial_gene_ratio[gene]*pop_size/sum(initial_gene_ratio.values()))
+        pop[i:j] = person('F', gene)
+        i = j
+    assert j == pop_size
     np.random.shuffle(pop)
     return pop
 
@@ -95,25 +95,25 @@ def next_gen(pop):
         j, k = np.random.randint(n), np.random.randint(n)
         children = children + create_children(pop[j], pop[k])
 
+    np.random.shuffle(children)
     children = [child for child in children
                 if np.random.rand() < survival_rates[child.gene]][:n]
 
-    np.random.shuffle(children)
-    return children
+    return np.array(children)
 
 
 def gene_percentage(pop, gene):
     return sum(1 for p in pop if p.gene == gene)/(1.0*len(pop))
 
 
-def play_for_gens(pop_size=500, no_gens=100, times_of_run = 100):
+def play_for_gens(pop_size=4, no_gens=6, times_of_run = 1):
     print("Running the simulations with populuation"
           "size %s for %s generations for %s times " %(pop_size, no_gens, times_of_run))
     pop_ratios = {
-        'XX': [[] for i in range(times_of_run)],
-        'XY': [[] for i in range(times_of_run)],
-        'YX': [[] for i in range(times_of_run)],
-        'YY': [[] for i in range(times_of_run)]
+        'XX': [np.zeros(no_gens) for i in xrange(times_of_run)],
+        'XY': [np.zeros(no_gens) for i in xrange(times_of_run)],
+        'YX': [np.zeros(no_gens) for i in xrange(times_of_run)],
+        'YY': [np.zeros(no_gens) for i in xrange(times_of_run)]
     }
     for i in xrange(times_of_run):
         pop = gen_population(pop_size)
@@ -121,11 +121,8 @@ def play_for_gens(pop_size=500, no_gens=100, times_of_run = 100):
         # Though XY is not YX is not different but ignored it for simplicity
         for j in xrange(no_gens):
             for gene in initial_gene_ratio.keys():
-                pop_ratios[gene][i].append(gene_percentage(pop, gene))
+                pop_ratios[gene][i][j] = gene_percentage(pop, gene)
             pop = next_gen(pop)
-
-        for gene in initial_gene_ratio.keys():
-            pop_ratios[gene][i] = np.array(pop_ratios[gene][i])
 
     for gene in initial_gene_ratio.keys():
         pop_ratios[gene] = sum(pop_ratios[gene])/times_of_run
@@ -134,9 +131,9 @@ def play_for_gens(pop_size=500, no_gens=100, times_of_run = 100):
 
 results = [None, None, None]
 
-# survival_rates['YY'] = 0.999
 results[2] = play_for_gens()
 
 plt.plot(results[2]['XY'], 'r')
 plt.plot(results[2]['YX'], 'g')
 plt.plot(results[2]['YY'], 'b')
+plt.plot(results[2]['XX'], 'y')
