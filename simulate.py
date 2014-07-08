@@ -30,17 +30,6 @@ import itertools
 from matplotlib import pyplot as plt
 from numba import jit
 
-class person():
-    def __init__(self, gender, gene):
-        self.gender = gender
-        self.gene = gene
-
-    def __str__(self):
-        return str((self.gender, self.gene))
-
-    def __repr__(self):
-        return self.__str__()
-
 
 survival_rates = {
     'XX': 1.0,
@@ -64,14 +53,6 @@ for g1 in initial_gene_ratio.keys():
         children_dict[(g1, g2)] = [reduce(lambda x, y: x + y, g)
                                    for g in itertools.product(g1, g2)]
 
-def create_children(parent1, parent2):
-    """
-    create the children out of parents
-    """
-    #XXX: this is independent of the gender of the parent
-    gene = children_dict[(parent1.gene, parent2.gene)]
-    return tuple([person('F', g) for g in gene])
-
 
 def gen_population(pop_size):
     # XXX: generating only female population
@@ -84,7 +65,7 @@ def gen_population(pop_size):
     i = 0
     for gene in initial_gene_ratio.keys():
         j = i + int(initial_gene_ratio[gene]*pop_size/sum(initial_gene_ratio.values()))
-        pop[i:j] = person('F', gene)
+        pop[i:j] = gene
         i = j
     assert j == pop_size
     np.random.shuffle(pop)
@@ -97,18 +78,18 @@ def next_gen(pop):
     children = []
     for i in xrange(n):
         j, k = np.random.randint(n), np.random.randint(n)
-        for child in create_children(pop[j], pop[k]):
+        for child in children_dict[(pop[j], pop[k])]:
             children.append(child)
 
     np.random.shuffle(children)
     children = [child for child in children
-                if np.random.rand() < survival_rates[child.gene]][:n]
+                if np.random.rand() < survival_rates[child]][:n]
 
     return np.array(children)
 
 
 def gene_percentage(pop, gene):
-    return sum(1 for p in pop if p.gene == gene)/(1.0*len(pop))
+    return sum(1 for p in pop if p == gene)/(1.0*len(pop))
 
 
 def play_for_gens(pop_size=100, no_gens=100, times_of_run=4):
@@ -136,9 +117,9 @@ def play_for_gens(pop_size=100, no_gens=100, times_of_run=4):
 
 results = [None, None, None]
 
-results[2] = play_for_gens()
-
-plt.plot(results[2]['XY'], 'r')
-plt.plot(results[2]['YX'], 'g')
-plt.plot(results[2]['YY'], 'b')
-plt.plot(results[2]['XX'], 'y')
+# results[2] = play_for_gens()
+#
+# plt.plot(results[2]['XY'], 'r')
+# plt.plot(results[2]['YX'], 'g')
+# plt.plot(results[2]['YY'], 'b')
+# plt.plot(results[2]['XX'], 'y')
