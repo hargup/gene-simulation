@@ -28,6 +28,7 @@ ressesive carrier """
 import numpy as np
 import itertools
 from matplotlib import pyplot as plt
+from numba import jit
 
 class person():
     def __init__(self, gender, gene):
@@ -55,18 +56,21 @@ initial_gene_ratio = {
     'YY': 1.0
 }
 
+
+children_dict = {}
+for g1 in initial_gene_ratio.keys():
+    for g2 in initial_gene_ratio.keys():
+        # the output produced by product is of type ('X', 'X')
+        children_dict[(g1, g2)] = [reduce(lambda x, y: x + y, g)
+                                   for g in itertools.product(g1, g2)]
+
 def create_children(parent1, parent2):
     """
     create the children out of parents
     """
     #XXX: this is independent of the gender of the parent
-    gene = [reduce(lambda x, y: x + y, g)
-            for g in itertools.product(parent1.gene, parent2.gene)]
-    # the output produced by product is of type ('X', 'X')
-    children = []
-    for g in gene:
-        children.append(person('F', g))
-    return children
+    gene = children_dict[(parent1.gene, parent2.gene)]
+    return tuple([person('F', g) for g in gene])
 
 
 def gen_population(pop_size):
@@ -93,7 +97,8 @@ def next_gen(pop):
     children = []
     for i in xrange(n):
         j, k = np.random.randint(n), np.random.randint(n)
-        children = children + create_children(pop[j], pop[k])
+        for child in create_children(pop[j], pop[k]):
+            children.append(child)
 
     np.random.shuffle(children)
     children = [child for child in children
@@ -106,7 +111,7 @@ def gene_percentage(pop, gene):
     return sum(1 for p in pop if p.gene == gene)/(1.0*len(pop))
 
 
-def play_for_gens(pop_size=4, no_gens=6, times_of_run = 1):
+def play_for_gens(pop_size=100, no_gens=100, times_of_run=4):
     print("Running the simulations with populuation"
           "size %s for %s generations for %s times " %(pop_size, no_gens, times_of_run))
     pop_ratios = {
