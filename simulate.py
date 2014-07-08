@@ -28,7 +28,6 @@ ressesive carrier """
 import numpy as np
 import itertools
 from matplotlib import pyplot as plt
-from numba import jit
 
 
 survival_rates = {
@@ -44,6 +43,10 @@ initial_gene_ratio = {
     'YX': 1.0,
     'YY': 1.0
 }
+
+class defaut_args():
+    pop_size = 1000
+    no_gens = 400
 
 
 children_dict = {}
@@ -92,34 +95,42 @@ def gene_percentage(pop, gene):
     return sum(1 for p in pop if p == gene)/(1.0*len(pop))
 
 
-def play_for_gens(pop_size=100, no_gens=100, times_of_run=4):
-    print("Running the simulations with populuation"
-          "size %s for %s generations for %s times " %(pop_size, no_gens, times_of_run))
-    pop_ratios = {
-        'XX': [np.zeros(no_gens) for i in xrange(times_of_run)],
-        'XY': [np.zeros(no_gens) for i in xrange(times_of_run)],
-        'YX': [np.zeros(no_gens) for i in xrange(times_of_run)],
-        'YY': [np.zeros(no_gens) for i in xrange(times_of_run)]
-    }
-    for i in xrange(times_of_run):
-        pop = gen_population(pop_size)
-
-        # Though XY is not YX is not different but ignored it for simplicity
-        for j in xrange(no_gens):
-            for gene in initial_gene_ratio.keys():
-                pop_ratios[gene][i][j] = gene_percentage(pop, gene)
-            pop = next_gen(pop)
-
+def play_for_gens(pop_size=defaut_args.pop_size, no_gens=defaut_args.no_gens):
+    pop_ratios = {}
     for gene in initial_gene_ratio.keys():
-        pop_ratios[gene] = sum(pop_ratios[gene])/times_of_run
+        pop_ratios[gene] = np.zeros(no_gens)
+
+    pop = gen_population(pop_size)
+
+    for i in xrange(no_gens):
+        for gene in initial_gene_ratio.keys():
+            pop_ratios[gene][i] = gene_percentage(pop, gene)
+        pop = next_gen(pop)
 
     return pop_ratios
 
-results = [None, None, None]
 
-# results[2] = play_for_gens()
-#
-# plt.plot(results[2]['XY'], 'r')
-# plt.plot(results[2]['YX'], 'g')
-# plt.plot(results[2]['YY'], 'b')
-# plt.plot(results[2]['XX'], 'y')
+def average_results(pop_size=defaut_args.pop_size, no_gens=defaut_args.no_gens, no_times=10):
+    pop_ratios = {}
+    for gene in initial_gene_ratio.keys():
+        pop_ratios[gene] = np.zeros(no_gens, dtype=np.float16)
+
+    for i in xrange(no_times):
+        result = play_for_gens(pop_size, no_gens)
+        for gene in initial_gene_ratio.keys():
+            pop_ratios[gene] += result[gene]
+
+    for gene in initial_gene_ratio.keys():
+        pop_ratios[gene] = pop_ratios[gene]/no_times
+
+    return pop_ratios
+
+
+def plot_populations(results):
+    # use %matplotlib inline in IPython
+    no_gens = len(results['XY'])
+    plt.plot(results['XY'], 'r')
+    plt.plot(results['YX'], 'g')
+    plt.plot(results['YY'], 'b')
+    plt.plot(results['XX'], 'y')
+    plt.axis([0, no_gens, 0, 1.0])
