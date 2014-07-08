@@ -78,21 +78,25 @@ def gen_population(pop_size):
 def next_gen(pop):
     n = len(pop)
 
-    children = []
+    children = np.zeros(4*n, dtype=tuple)
     for i in xrange(n):
         j, k = np.random.randint(n), np.random.randint(n)
-        for child in children_dict[(pop[j], pop[k])]:
-            children.append(child)
+        for l, child in enumerate(children_dict[(pop[j], pop[k])]):
+            children[4*i + l] = child
 
-    np.random.shuffle(children)
-    children = [child for child in children
-                if np.random.rand() < survival_rates[child]][:n]
+    rand_arr = np.random.rand(4*n)
+    s_rate = children.copy()
+    for gene in initial_gene_ratio.keys():
+        s_rate[s_rate == gene] = survival_rates[gene]
 
-    return np.array(children)
+    surviving_children = children[rand_arr < s_rate]
+    np.random.shuffle(surviving_children)
+
+    return surviving_children[:n]
 
 
 def gene_percentage(pop, gene):
-    return sum(1 for p in pop if p == gene)/(1.0*len(pop))
+    return np.sum(pop == gene)/(1.0*len(pop))
 
 
 def play_for_gens(pop_size=defaut_args.pop_size, no_gens=defaut_args.no_gens):
