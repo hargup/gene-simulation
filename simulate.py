@@ -1,33 +1,36 @@
 """ A simulation to check the effect of interbreeding on the percentage of
-ressesive carrier """
+recessive carrier """
 
 # The prime motive for this simulation was to test if interbreeding will
-# eleminate the ressesive but unfavourable gene from the population faster than
-# the exogamy would do. I'm little confused about simulating exogamy and interbreeding
-# and the current program simulates only exogamy. It appears that interbreeding
-# can eliminate unfourable traits pretty fast even if they appear as only ressesive triats
-# so what is left are the traits which are favourable, exogamy appears to have its own
-# advantages by as it can have best of both world mixing the goods two or more not very
-# closely related gene pools. Or maybe a something like a restricted exogamy is
-# favorable which is followed in northern India, where people aren't allowed to marry very
-# closely related people (people of same gotra), but they don't marry outside the caste.
-# Or maybe something like branch out -> grow in isolation -> merge. BTW we(humans) did
-# branched out of early apes and mating with gorrilas (our cousins) doesn't seems to be
-# very good idea.
+# eliminate the recessive but unfavourable gene from the population faster than
+# the exogamy would do. I'm little confused about simulating exogamy and
+# interbreeding and the current program simulates only exogamy. It appears that
+# interbreeding can eliminate unfavourable traits pretty fast even if they
+# appear as only recessive traits so what is left are the traits which are
+# favourable, exogamy appears to have its own advantages by as it can have best
+# of both world mixing the goods two or more not very closely related gene
+# pools. Or maybe a something like a restricted exogamy is favorable which is
+# followed in northern India, where people aren't allowed to marry very closely
+# related people (people of same gotra), but they don't marry outside the
+# caste.  Or maybe something like branch out -> grow in isolation -> merge. BTW
+# we(humans) did branched out of early apes and mating with gorillas (our
+# cousins) doesn't seems to be very good idea.
 #
-# Outbreeding appears to have a better chance at producing good, whereas inbreeding seems to
-# be better at eliminating the bad. I guess there will be a lot of factors at play for example
-# the inbreeding specie will have a lot more unsuccessful kids which may lead to negative population
-# growth and the ultimate extinction of the specie. We have a lot less risk of such cases in
-# outbreeding because there are less chances of producing something too bad but what are the rates
-# of progation of some good trait emerging out of the system? These are some pretty
-# interesting questions.
+# Out breeding appears to have a better chance at producing good, whereas
+# inbreeding seems to be better at eliminating the bad. I guess there will be
+# a lot of factors at play for example the inbreeding specie will have a lot
+# more unsuccessful kids which may lead to negative population growth and the
+# ultimate extinction of the specie. We have a lot less risk of such cases in
+# out breeding because there are less chances of producing something too bad
+# but what are the rates of propagation of some good trait emerging out of the
+# system? These are some pretty interesting questions.
 
 # XXX: the simulation might not even a good candidate for inbreeding
 
 import numpy as np
 import itertools
 from matplotlib import pyplot as plt
+from functools import reduce
 
 
 survival_rates = {
@@ -79,7 +82,7 @@ def next_gen(pop):
     n = len(pop)
 
     children = np.zeros(4*n, dtype=tuple)
-    for i in xrange(n):
+    for i in range(n):
         j, k = np.random.randint(n), np.random.randint(n)
         for l, child in enumerate(children_dict[(pop[j], pop[k])]):
             children[4*i + l] = child
@@ -106,7 +109,7 @@ def play_for_gens(pop_size=defaut_args.pop_size, no_gens=defaut_args.no_gens):
 
     pop = gen_population(pop_size)
 
-    for i in xrange(no_gens):
+    for i in range(no_gens):
         for gene in initial_gene_ratio.keys():
             pop_ratios[gene][i] = gene_percentage(pop, gene)
         pop = next_gen(pop)
@@ -119,7 +122,7 @@ def average_results(pop_size=defaut_args.pop_size, no_gens=defaut_args.no_gens, 
     for gene in initial_gene_ratio.keys():
         pop_ratios[gene] = np.zeros(no_gens, dtype=np.float16)
 
-    for i in xrange(no_times):
+    for i in range(no_times):
         result = play_for_gens(pop_size, no_gens)
         for gene in initial_gene_ratio.keys():
             pop_ratios[gene] += result[gene]
