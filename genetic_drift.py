@@ -89,8 +89,8 @@ def play_for_gens(pop_size=DefaultArgs.pop_size, no_gens=DefaultArgs.no_gens):
     return pop_ratios
 
 
-def average_results(pop_size=DefaultArgs.pop_size,
-                    no_gens=DefaultArgs.no_gens, no_times=10):
+def average_results_by_rank(pop_size=DefaultArgs.pop_size,
+                            no_gens=DefaultArgs.no_gens, no_times=10):
     """
     Caculates the variation of ratio of the population from the highest to
     the lowest percentage with the number of generations
@@ -107,6 +107,22 @@ def average_results(pop_size=DefaultArgs.pop_size,
     return avg
 
 
+def average_results_by_gene(pop_size=DefaultArgs.pop_size,
+                            no_gens=DefaultArgs.no_gens, no_times=10):
+    """
+    Caculates the variation of ratio of the population from the highest to
+    the lowest percentage with the number of generations
+    """
+    avg = np.array(play_for_gens(pop_size, no_gens).values())
+    for i in range(1, no_times):
+        result = np.array(play_for_gens(pop_size, no_gens).values())
+        avg += result
+
+    avg = avg/no_times
+
+    return avg
+
+
 def plot_ranks(avg):
     no_ranks, no_gens = avg.shape
     for i in range(no_ranks):
@@ -116,12 +132,31 @@ def plot_ranks(avg):
     plt.axis([0, no_gens, 0, 1.0])
 
 
+def show_drift_with_with_pop_size():
+    pop_sizes = [20, 80, 320, 1280, 2560, 5120]
+    no_gens = 1000
+    no_times = 50
+
+    sns.set_style('darkgrid')
+
+    for pop_size in pop_sizes:
+        if pop_size < 500:
+            no_times = 400
+        result = average_results_by_rank(pop_size=pop_size,
+                                         no_gens=no_gens,
+                                         no_times=no_times)
+        result = result - 0.5
+        label = 'size= %s' % (pop_size)
+        plt.plot(result[1], label=label)
+
+    plt.axis([0, no_gens, 0, 1.0])
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.show()
+
+
 def plot_populations(results):
     # use %matplotlib inline in IPython
     no_gens = len(results['X'])
     plt.plot(results['Y'], 'r')
     plt.plot(results['X'], 'b')
     plt.axis([0, no_gens, 0, 1.0])
-
-# plt.plot(avg[0], 'r')
-# plt.plot(avg[1], 'b')
